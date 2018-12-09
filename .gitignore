@@ -8,4 +8,5 @@ out/
 *.jar
 # Log file
  *.log
+*.iml
 
