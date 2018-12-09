@@ -1,4 +1,4 @@
-package com.flaptastic;
+package com.github.blockjon.flaptastic;
 
 public class Main {
 
