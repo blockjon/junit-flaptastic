@@ -4,9 +4,29 @@
     <groupId>com.github.blockjon.flaptastic</groupId>
     <artifactId>junit-flaptastic</artifactId>
     <packaging>jar</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.0.1</version>
     <name>junit-flaptastic</name>
-    <url>http://maven.apache.org</url>
+    <url>https://www.flaptastic.com</url>
+    <description>A plugin designed to help you stop unit test flapping. Works great with CICD systems such as CircleCI, TravisCI, and Jenkins.</description>
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Jonathan Block</name>
+            <email>block.jon@gmail.com</email>
+            <organization>Flaptastic</organization>
+            <organizationUrl>https://www.flaptastic.com</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git://github.com/blockjon/junit-flaptastic.git</connection>
+        <developerConnection>scm:git:ssh://github.com:blockjon/junit-flaptastic.git</developerConnection>
+        <url>http://github.com/blockjon/junit-flaptastic/tree/master</url>
+    </scm>
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
