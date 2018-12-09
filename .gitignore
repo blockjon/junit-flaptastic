@@ -8,5 +8,14 @@ out/
 *.jar
 # Log file
  *.log
+
 *.iml
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/captures
+.externalNativeBuild
 
