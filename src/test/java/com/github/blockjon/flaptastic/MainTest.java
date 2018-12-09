@@ -2,9 +2,9 @@ package com.github.blockjon.flaptastic;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import org.junit.jupiter.api.extension.ExtendWith;
+// import org.junit.jupiter.api.extension.ExtendWith;
 
-@ExtendWith({ Disableable.class })
+// @ExtendWith({ Disableable.class })
 class MainTest {
 
     @Test
