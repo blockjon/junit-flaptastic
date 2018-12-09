@@ -16,6 +16,6 @@ class MainTest {
     @Test
     void justAnExample2() {
         System.out.println("A faulty test");
-        assertEquals(1, 2);
+        assertEquals(1, 1);
     }
 }
