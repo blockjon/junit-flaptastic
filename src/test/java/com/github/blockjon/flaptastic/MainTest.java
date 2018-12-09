@@ -1,23 +1,38 @@
 package com.github.blockjon.flaptastic;
 
-import org.junit.jupiter.api.Test;
-// import java.lang.Override;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-// import org.junit.jupiter.api.extension.ExecutionCondition;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
-
-class MainTest {
-
-    @Test
-    void testMyTest() {
-        System.out.println("This test method should be run");
-        assertEquals(2, 2);
+/**
+ * Unit test for simple App.
+ */
+public class MainTest extends TestCase
+{
+    /**
+     * Create the test case
+     *
+     * @param testName name of the test case
+     */
+    public MainTest( String testName )
+    {
+        super( testName );
     }
 
-//    @Test
-//    void justAnExample2() {
-//        System.out.println("A faulty test");
-//        assertEquals(1, 2);
-//    }
-}
+    /**
+     * @return the suite of tests being tested
+     */
+    public static Test suite()
+    {
+        return new TestSuite(MainTest.class );
+    }
 
+    public void testPassingAssertion()
+    {
+        assertTrue( true );
+    }
+    public void testFailingAssertion()
+    {
+        assertTrue( true );
+    }
+}
