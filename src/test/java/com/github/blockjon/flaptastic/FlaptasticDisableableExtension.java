@@ -2,7 +2,7 @@ package com.github.blockjon.flaptastic;
 
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
-import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
+import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 
 
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -14,11 +14,8 @@ import java.util.ArrayList;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.DataOutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonObject;
@@ -26,12 +23,16 @@ import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import java.io.File;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
 
 
-public class FlaptasticDisableableExtension implements ExecutionCondition {
+
+public class FlaptasticDisableableExtension implements ExecutionCondition, AfterTestExecutionCallback {
     static HashMap disabledHashMap = null;
     static Boolean tryFlaptastic = null;
     static Boolean flaptasticActivated = null;
+    static JSONArray testResults = new JSONArray();
 
     public FlaptasticDisableableExtension() {
         if (tryFlaptastic == null) {
@@ -129,21 +130,8 @@ public class FlaptasticDisableableExtension implements ExecutionCondition {
     public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext execContext) {
         // A function name like "testSomething1"
         String unitTestFunctionName = execContext.getTestMethod().get().getName();
+        String relativePathToTestFile = this.getRelativePathToTestFile(execContext);
 
-        // This shows you the path to the test class within the compiled classes area
-        // Example: "/Users/jonathanblock/workspace/junit-flaptastic/target/test-classes/com/github/blockjon/flaptastic/"
-        String pathToTestClass = execContext.getTestClass().get().getResource(".").getPath();
-
-        // The likely filename of the file that the unit test was authored within.
-        String unitTestClassName = execContext.getParent().get().getDisplayName();
-
-        // This represents the path to the tests directory in the source code.
-        // Example "/Users/jonathanblock/workspace/junit-flaptastic/src/test/java"
-        String pathToTests = new File("").getAbsolutePath();
-
-
-        String relativePathToTestClass = pathToTestClass.replaceAll("^" + pathToTests + "/", "");
-        String relativePathToTestFile = relativePathToTestClass + unitTestClassName + ".class";
 
         if (this.isTestDisabled(relativePathToTestFile, unitTestFunctionName)) {
             return ConditionEvaluationResult.disabled("Disabled via flaptastic.");
@@ -178,5 +166,95 @@ public class FlaptasticDisableableExtension implements ExecutionCondition {
             it.remove(); // avoids a ConcurrentModificationException
         }
         return false;
+    }
+
+    public void afterTestExecution(ExtensionContext context) throws Exception {
+        String file = this.getRelativePathToTestFile(context);
+        Integer line = 0;
+        String name = context.getTestMethod().get().getName();
+        String status;
+        String ex = null;
+        JSONArray file_stack = new JSONArray();
+        JSONArray exception_site = new JSONArray();
+
+        // If an exception is detected...
+        if (context.getExecutionException().isPresent()) {
+            status = "passed";
+        } else {
+            status = "failed";
+        }
+
+        JSONObject obj = new JSONObject();
+        obj.put("status", status);
+        obj.put("file", file);
+        obj.put("line", line);
+        obj.put("name", name);
+        obj.put("exception", ex);
+        obj.put("file_stack", file_stack);
+        obj.put("exception_site", exception_site);
+        testResults.add(obj);
+
+        this.sendQueueToIngest();
+    }
+
+    private void sendQueueToIngest() {
+        String query = "https://frontend-api.flaptastic.com/api/v1/ingest";
+        // String query = "http://requestbin.fullcontact.com/1o3c5fu1";
+
+        Long ts = System.currentTimeMillis() / 1000L;
+
+        JSONObject obj = new JSONObject();
+        obj.put("branch", System.getenv("FLAPTASTIC_BRANCH"));
+        obj.put("commit_id", System.getenv("FLAPTASTIC_COMMIT_ID"));
+        obj.put("link", System.getenv("FLAPTASTIC_LINK"));
+        obj.put("organization_id", System.getenv("FLAPTASTIC_ORGANIZATION_ID"));
+        obj.put("service", System.getenv("FLAPTASTIC_SERVICE"));
+        obj.put("timestamp", ts);
+        obj.put("test_results", testResults);
+
+        String jsonText = obj.toString();
+
+        try {
+            URL url = new java.net.URL(query);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(5000);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            conn.setRequestProperty("Bearer", System.getenv("FLAPTASTIC_API_TOKEN"));
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+
+            DataOutputStream dOs = new DataOutputStream(conn.getOutputStream());
+            dOs.write(jsonText.getBytes("UTF-8"));
+            dOs.close();
+
+            Integer responseCode = conn.getResponseCode();
+
+            conn.disconnect();
+
+            throw new Exception("Failure to deliver flaps. Response code " + responseCode.toString() + " returned.");
+        } catch (Exception e) {
+            System.out.println("Problem detected when delivering flaps: " + e.toString());
+        }
+        // Clear the buffer.
+        testResults = new JSONArray();
+    }
+
+    private String getRelativePathToTestFile(ExtensionContext context) {
+        // This shows you the path to the test class within the compiled classes area
+        // Example: "/Users/jonathanblock/workspace/junit-flaptastic/target/test-classes/com/github/blockjon/flaptastic/"
+        String pathToTestClass = context.getTestClass().get().getResource(".").getPath();
+
+        // The likely filename of the file that the unit test was authored within.
+        String unitTestClassName = context.getParent().get().getDisplayName();
+
+        // This represents the path to the tests directory in the source code.
+        // Example "/Users/jonathanblock/workspace/junit-flaptastic/src/test/java"
+        String pathToTests = new File("").getAbsolutePath();
+
+
+        String relativePathToTestClass = pathToTestClass.replaceAll("^" + pathToTests + "/", "");
+        String relativePathToTestFile = relativePathToTestClass + unitTestClassName + ".java";
+        return relativePathToTestFile;
     }
 }
