@@ -25,7 +25,9 @@ import com.google.gson.JsonElement;
 import java.io.File;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
-
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtMethod;
 
 
 public class FlaptasticDisableableExtension implements ExecutionCondition, AfterTestExecutionCallback {
@@ -170,8 +172,9 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
 
     public void afterTestExecution(ExtensionContext context) throws Exception {
         String file = this.getRelativePathToTestFile(context);
-        Integer line = 0;
         String name = context.getTestMethod().get().getName();
+        String pkg = context.getTestMethod().get().getDeclaringClass().getName();
+        Integer line = this.getLine(pkg, name);
         String status;
         String ex = null;
         JSONArray file_stack = new JSONArray();
@@ -179,9 +182,15 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
 
         // If an exception is detected...
         if (context.getExecutionException().isPresent()) {
-            status = "passed";
-        } else {
             status = "failed";
+            ex = context.getExecutionException().toString();
+            for (int i=0; i<context.getExecutionException().get().getStackTrace().length; i++) {
+                file_stack.add(context.getExecutionException().get().getStackTrace()[i].getFileName());
+            }
+            String x = "x";
+
+        } else {
+            status = "passed";
         }
 
         JSONObject obj = new JSONObject();
@@ -199,7 +208,6 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
 
     private void sendQueueToIngest() {
         String query = "https://frontend-api.flaptastic.com/api/v1/ingest";
-        // String query = "http://requestbin.fullcontact.com/1o3c5fu1";
 
         Long ts = System.currentTimeMillis() / 1000L;
 
@@ -232,7 +240,9 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
 
             conn.disconnect();
 
-            throw new Exception("Failure to deliver flaps. Response code " + responseCode.toString() + " returned.");
+            if (responseCode != 201) {
+                throw new Exception("Failure to deliver flaps. Response code " + responseCode.toString() + " returned.");
+            }
         } catch (Exception e) {
             System.out.println("Problem detected when delivering flaps: " + e.toString());
         }
@@ -254,7 +264,19 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
 
 
         String relativePathToTestClass = pathToTestClass.replaceAll("^" + pathToTests + "/", "");
-        String relativePathToTestFile = relativePathToTestClass + unitTestClassName + ".java";
+        String relativePathToTestFile = relativePathToTestClass + unitTestClassName + ".class";
         return relativePathToTestFile;
+    }
+
+    private Integer getLine(String pkg, String name) {
+        ClassPool pool = ClassPool.getDefault();
+        try {
+            CtClass cc = pool.get(pkg);
+            CtMethod methodX = cc.getDeclaredMethod(name);
+            int lineNumber = methodX.getMethodInfo().getLineNumber(0);
+            return lineNumber;
+        } catch (Exception e) {
+            return 0;
+        }
     }
 }
