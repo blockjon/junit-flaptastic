@@ -185,9 +185,8 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
             status = "failed";
             ex = context.getExecutionException().toString();
             for (int i=0; i<context.getExecutionException().get().getStackTrace().length; i++) {
-                file_stack.add(context.getExecutionException().get().getStackTrace()[i].getFileName());
+                file_stack.add(context.getExecutionException().get().getStackTrace()[i].getFileName() + " (" + context.getExecutionException().get().getStackTrace()[i].getClassName() + ")");
             }
-            String x = "x";
 
         } else {
             status = "passed";
