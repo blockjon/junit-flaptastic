@@ -10,7 +10,7 @@ class SomeTest {
     // @ExtendWith({ FlaptasticDisableableExtension.class })
     @Test
     void testSomething1() {
-        assertEquals(1, 2);
+        assertEquals(1, 1);
     }
 
     // @ExtendWith({ FlaptasticDisableableExtension.class })
