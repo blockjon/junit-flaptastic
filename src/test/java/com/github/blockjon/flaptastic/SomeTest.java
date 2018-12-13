@@ -9,7 +9,7 @@ class SomeTest {
 
     @ExtendWith({ FlaptasticDisableableExtension.class })
     @Test
-    void testSomething1() {
+    void testSomethingGreat1() {
         assertEquals(1, 2);
     }
 
