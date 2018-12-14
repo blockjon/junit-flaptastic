@@ -4,7 +4,7 @@
     <groupId>com.github.blockjon.flaptastic</groupId>
     <artifactId>junit-flaptastic</artifactId>
     <packaging>jar</packaging>
-    <version>0.0.7</version>
+    <version>0.0.8</version>
     <name>junit-flaptastic</name>
     <url>https://www.flaptastic.com</url>
     <description>A plugin designed to help you stop unit test flapping. Works great with CICD systems such as CircleCI, TravisCI, and Jenkins.</description>
