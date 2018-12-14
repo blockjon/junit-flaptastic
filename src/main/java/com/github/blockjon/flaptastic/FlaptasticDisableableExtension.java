@@ -3,7 +3,7 @@ package com.github.blockjon.flaptastic;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
-
+import org.junit.jupiter.api.extension.AfterAllCallback;
 
 import org.junit.jupiter.api.extension.ExtensionContext;
 import java.util.HashMap;
@@ -30,7 +30,7 @@ import javassist.CtClass;
 import javassist.CtMethod;
 
 
-public class FlaptasticDisableableExtension implements ExecutionCondition, AfterTestExecutionCallback {
+public class FlaptasticDisableableExtension implements ExecutionCondition, AfterTestExecutionCallback, AfterAllCallback {
     private static HashMap<String, List> disabledHashMap = new HashMap<String, List>();
     private static Boolean tryFlaptastic = null;
     private static Boolean flaptasticActivated = null;
@@ -170,6 +170,15 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
         return false;
     }
 
+    @Override
+    public void afterAll(ExtensionContext var1) throws Exception {
+        String x = "1";
+        this.sendQueueToIngest();
+        if (false) {
+            throw new Exception("x");
+        }
+    }
+
     public void afterTestExecution(ExtensionContext context) throws Exception {
         String file = this.getRelativePathToTestFile(context);
         String name = context.getTestMethod().get().getName();
@@ -206,6 +215,12 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
     }
 
     private void sendQueueToIngest() {
+        if(tryFlaptastic == false) {
+            // Clear the buffer.
+            testResults = new JSONArray();
+            return;
+        }
+
         String query = "https://frontend-api.flaptastic.com/api/v1/ingest";
 
         Long ts = System.currentTimeMillis() / 1000L;
