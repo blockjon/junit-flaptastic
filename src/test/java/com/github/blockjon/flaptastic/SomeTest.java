@@ -11,7 +11,7 @@ class SomeTest {
     @ExtendWith({ FlaptasticDisableableExtension.class })
     @Test
     void testSomethingGreat1() {
-        assertEquals(1, 2);
+        assertEquals(1, 1);
     }
 
     // @ExtendWith({ FlaptasticDisableableExtension.class })

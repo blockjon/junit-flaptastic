@@ -37,12 +37,12 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
     static JSONArray testResults = new JSONArray();
 
     public FlaptasticDisableableExtension() {
-        if (tryFlaptastic == null) {
+        if (FlaptasticDisableableExtension.tryFlaptastic == null) {
             if (this.sufficientEnvVarsDetected()) {
                 System.out.println("Flaptastic activated.\n");
-                tryFlaptastic = true;
+                FlaptasticDisableableExtension.tryFlaptastic = true;
             } else {
-                tryFlaptastic = false;
+                FlaptasticDisableableExtension.tryFlaptastic = false;
                 return;
             }
             this.loadDisabledTests();
@@ -90,8 +90,8 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
             }
             disabled.put(ignoredFileName, testsToIgnore);
         }
-        disabledHashMap = disabled;
-        flaptasticActivated = true;
+        FlaptasticDisableableExtension.disabledHashMap = disabled;
+        FlaptasticDisableableExtension.flaptasticActivated = true;
     }
 
     private String getDisabledTestsJson() {
@@ -151,7 +151,7 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
      * @return
      */
     private boolean isTestDisabled(String relativePathToFile, String functionName) {
-        Iterator it = disabledHashMap.entrySet().iterator();
+        Iterator it = FlaptasticDisableableExtension.disabledHashMap.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
             // If one of the known disabled files (pair.getKey()) is the name
@@ -200,7 +200,7 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
         obj.put("exception", ex);
         obj.put("file_stack", file_stack);
         obj.put("exception_site", exception_site);
-        testResults.add(obj);
+        FlaptasticDisableableExtension.testResults.add(obj);
 
         this.sendQueueToIngest();
     }
@@ -217,7 +217,7 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
         obj.put("organization_id", System.getenv("FLAPTASTIC_ORGANIZATION_ID"));
         obj.put("service", System.getenv("FLAPTASTIC_SERVICE"));
         obj.put("timestamp", ts);
-        obj.put("test_results", testResults);
+        obj.put("test_results", FlaptasticDisableableExtension.testResults);
 
         String jsonText = obj.toString();
 
@@ -246,7 +246,7 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
             System.out.println("Problem detected when delivering flaps: " + e.toString());
         }
         // Clear the buffer.
-        testResults = new JSONArray();
+        FlaptasticDisableableExtension.testResults = new JSONArray();
     }
 
     private String getRelativePathToTestFile(ExtensionContext context) {
