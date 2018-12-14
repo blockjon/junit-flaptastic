@@ -130,6 +130,9 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
 
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext execContext) {
+        if (execContext.getTestMethod().value != null) {
+            return ConditionEvaluationResult.enabled("Flaptastic is activated for the class context no matter what.");
+        }
         // A function name like "testSomething1"
         String unitTestFunctionName = execContext.getTestMethod().get().getName();
         String relativePathToTestFile = this.getRelativePathToTestFile(execContext);
