@@ -30,6 +30,7 @@ import javassist.CtClass;
 import javassist.CtMethod;
 
 
+
 public class FlaptasticDisableableExtension implements ExecutionCondition, AfterTestExecutionCallback, AfterAllCallback {
     private static HashMap<String, List> disabledHashMap = new HashMap<String, List>();
     private static Boolean tryFlaptastic = null;
@@ -130,9 +131,10 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
 
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext execContext) {
-        if (execContext.getTestMethod().value != null) {
-            return ConditionEvaluationResult.enabled("Flaptastic is activated for the class context no matter what.");
+        if (execContext.getClass().getName() == "org.junit.jupiter.engine.descriptor.ClassExtensionContext") {
+            return ConditionEvaluationResult.enabled("Flaptastic does not activate on methods directly.");
         }
+
         // A function name like "testSomething1"
         String unitTestFunctionName = execContext.getTestMethod().get().getName();
         String relativePathToTestFile = this.getRelativePathToTestFile(execContext);
@@ -175,11 +177,7 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
 
     @Override
     public void afterAll(ExtensionContext var1) throws Exception {
-        String x = "1";
         this.sendQueueToIngest();
-        if (false) {
-            throw new Exception("x");
-        }
     }
 
     public void afterTestExecution(ExtensionContext context) throws Exception {
