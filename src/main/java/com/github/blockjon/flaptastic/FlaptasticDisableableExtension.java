@@ -190,12 +190,21 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
         JSONArray file_stack = new JSONArray();
         JSONArray exception_site = new JSONArray();
 
+        String stackClassName;
+        String stackFileName;
+        String stackLineNumber;
+
         // If an exception is detected...
         if (context.getExecutionException().isPresent()) {
             status = "failed";
             ex = context.getExecutionException().toString();
+
             for (int i=0; i<context.getExecutionException().get().getStackTrace().length; i++) {
-                file_stack.add(context.getExecutionException().get().getStackTrace()[i].getFileName() + " (" + context.getExecutionException().get().getStackTrace()[i].getClassName() + ")");
+                stackFileName = context.getExecutionException().get().getStackTrace()[i].getFileName();
+                stackClassName = context.getExecutionException().get().getStackTrace()[i].getClassName();
+                stackLineNumber =  Integer.toString(context.getExecutionException().get().getStackTrace()[i].getLineNumber());
+
+                file_stack.add(stackClassName + "(" + stackFileName + ":" + stackLineNumber + ")");
             }
 
         } else {
@@ -207,12 +216,17 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
         obj.put("file", file);
         obj.put("line", line);
         obj.put("name", name);
+        obj.put("package", pkg);
         obj.put("exception", ex);
         obj.put("file_stack", file_stack);
         obj.put("exception_site", exception_site);
         testResults.add(obj);
 
-        this.sendQueueToIngest();
+        // Only trigger the dump when the number of items in the batch
+        // are greater than 10.
+        if (testResults.size() > 9) {
+            this.sendQueueToIngest();
+        }
     }
 
     private void sendQueueToIngest() {
