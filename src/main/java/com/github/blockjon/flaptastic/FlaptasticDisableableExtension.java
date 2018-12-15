@@ -36,13 +36,19 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
     private static Boolean tryFlaptastic = null;
     private static Boolean flaptasticActivated = null;
     private static JSONArray testResults = new JSONArray();
+    private static Integer numTestsSent = 0;
 
     public FlaptasticDisableableExtension() {
         if (tryFlaptastic == null) {
             if (this.sufficientEnvVarsDetected()) {
-                System.out.println("Flaptastic activated.\n");
+                if (this.verbosityGreaterThan(0)) {
+                    this.eprint("Flaptastic plugin was active during this unit test run.");
+                }
                 tryFlaptastic = true;
             } else {
+                if (this.verbosityGreaterThan(0)) {
+                    System.err.println("Flaptastic not activated. Insufficient required environment variables. https://www.flaptastic.com/api\n");
+                }
                 tryFlaptastic = false;
                 return;
             }
@@ -50,13 +56,21 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
         }
     }
 
+    private void eprint(String message) {
+        System.err.println("Flaptastic plugin: " + message);
+    }
+
+    private boolean verbosityGreaterThan(int level) {
+        return System.getenv("FLAPTASTIC_VERBOSITY") != null && Integer.parseInt(System.getenv("FLAPTASTIC_VERBOSITY")) > level;
+    }
+
     private boolean sufficientEnvVarsDetected() {
         String envVarName;
         String envVarValue;
         String[] envVarNames = new String[]{
-                "FLAPTASTIC_API_TOKEN",
-                "FLAPTASTIC_ORGANIZATION_ID",
-                "FLAPTASTIC_SERVICE"
+            "FLAPTASTIC_API_TOKEN",
+            "FLAPTASTIC_ORGANIZATION_ID",
+            "FLAPTASTIC_SERVICE"
         };
         for (int i = 0; i < envVarNames.length; i++) {
             envVarName = envVarNames[i];
@@ -178,6 +192,9 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
     @Override
     public void afterAll(ExtensionContext var1) throws Exception {
         this.sendQueueToIngest();
+        if (tryFlaptastic && this.verbosityGreaterThan(0)) {
+            this.eprint(numTestsSent + " tests were sent.");
+        }
     }
 
     public void afterTestExecution(ExtensionContext context) throws Exception {
@@ -270,11 +287,19 @@ public class FlaptasticDisableableExtension implements ExecutionCondition, After
             conn.disconnect();
 
             if (responseCode != 201) {
-                throw new Exception("Failure to deliver flaps. Response code " + responseCode.toString() + " returned.");
+                if (this.verbosityGreaterThan(0)) {
+                    this.eprint("Failure to deliver flaps. Response code " + responseCode + " returned.");
+                }
             }
         } catch (Exception e) {
-            System.out.println("Problem detected when delivering flaps: " + e.toString());
+            if (this.verbosityGreaterThan(0)) {
+                this.eprint("Problem detected when delivering flaps: " + e.toString());
+            }
         }
+
+        // Track number of tests sent.
+        numTestsSent+= testResults.size();
+
         // Clear the buffer.
         testResults = new JSONArray();
     }
